@@ -70,9 +70,8 @@ class MQTTClient(object):
                              whereas the payload is a json string in the format {"data": float, "unit": str},
                              for example the payload of a temperature sample would be: {"data": 22.5, "unit": "C"}
         """
-        complete_topic = "{}/{}".format(self._base_topic, sample.label)
         payload = "{{\"data\": {data}, \"unit\": \"{unit}\"}}".format(data=sample.data, unit=sample.unit)
-        self.publish(complete_topic, payload)
+        self.publish(sample.label, payload)
 
     def publish_event(self, topic):
         """Publish an event on a topic

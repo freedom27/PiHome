@@ -129,7 +129,7 @@ def _get_mqtt_client():
         MQTTClient
     """
     addr = configmanager.config["mqtt"]["host"]
-    port = configmanager.config["mqtt"]["port"]
+    port = configmanager.config.getint("mqtt", "port")
     auth_info = {}
     auth_info["user"] = configmanager.config["mqtt"]["user"]
     auth_info["password"] = configmanager.config["mqtt"]["password"]

@@ -34,7 +34,9 @@ class SensorsManager(object):
         self._events = events
         self._mqtt_client = mqtt_client
         # registering the events to detect
+        GPIO.setmode(GPIO.BCM)
         for event_channel in self._events.keys():
+            GPIO.setup(event_channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
             GPIO.add_event_detect(event_channel, GPIO.RISING, callback=self._post_event, bouncetime=300)
         self._sampling_interval = sampling_interval
 

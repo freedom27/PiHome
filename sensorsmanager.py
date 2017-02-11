@@ -1,5 +1,5 @@
 from time import sleep
-import RPi.GPIO as GPIO
+from gpiomanager import GPIO
 
 
 class SensorsManager(object):

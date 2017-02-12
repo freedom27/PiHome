@@ -8,7 +8,10 @@ class MQTTClient(object):
     to the broker
 
     Attributes:
+        _addr (str): the address of the mqtt broker
+        _port (int): the port where the mqtt broker is listening for connections
         _client (paho.mqtt.client.Client): the actuall mqtt client
+        _connected (bool): values telling if currently connected or not to a MQTT broker
         _base_topic (str): the base topic to use when puplishing samples or notifications
                            (could be something like "home/living_room")
 
@@ -26,11 +29,12 @@ class MQTTClient(object):
             base_topic (str, optional): the base topic to use when puplishing samples or notifications
                               (could be something like "home/living_room")
         """
+        self._addr = addr
+        self._port = port
+        self._connected = False
         self._client = mqtt.Client(client_id="", clean_session=True, userdata=None, protocol=mqtt.MQTTv311)
         if auth_info is not None:
             self._client.username_pw_set(auth_info["user"], auth_info["password"])
-        self._client.connect(addr, port=port, keepalive=60, bind_address="")
-        self._client.loop_start()
         self._base_topic = base_topic
 
     def __del__(self):
@@ -39,8 +43,36 @@ class MQTTClient(object):
         When class is garbage collected this method perform sum clean-up such as stopping
         the background loop and disconnecting from the broker
         """
-        self._client.loop_stop()
-        self._client.disconnect()
+        self.stop()
+
+    def start(self):
+        """Starts the client
+
+        The method connects the client to the MQTT broker and starts the network loop
+        """
+        if not self._connected:
+            self._client.connect(self._addr, port=self._port, keepalive=60, bind_address="")
+            self._client.loop_start()
+            self._connected = True
+
+    def stop(self):
+        """Stop the client
+
+        The method stops the network loop and disconnects from the MQTT broker
+        """
+        if self._connected:
+            self._client.loop_stop()
+            self._client.disconnect()
+            self._connected = False
+
+    def is_connected(self):
+        """Checks if the client is currently connected to a MQTT broker
+
+        Returns:
+            bool. Returns True if currently connected to a broker, False otherwise
+        """
+        return self._connected
+
 
     def publish(self, topic, payload):
         """Publish a payload on a subtopic

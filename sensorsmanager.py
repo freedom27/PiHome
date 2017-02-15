@@ -23,6 +23,7 @@ class SensorsManager(multiprocessing.Process):
                                           as the internal flag is set to False the process keeps running
 
     """
+
     def __init__(self, sensors, events, mqtt_client, sampling_interval=60):
         """Initialize the SensorsManager class
 
@@ -72,11 +73,18 @@ class SensorsManager(multiprocessing.Process):
             self._mqtt_client.publish_event(self._events[channel])
             self._lock.release()
 
+    def _sample(self):
+        """Use the sensors to sample data and publish it on the MQTT broker
+
+        The method collect data from all its sensor and then publish it all on the MQTT broker
+        """
+        samples = [sample for sublist in [sensor.sample() for sensor in self._sensors] for sample in sublist]
+        self._post_samples(samples)
+
     def _start_sampling(self):
         """Method to invoke to start sampling data using the sensors"""
         while not self._stop_sampling.is_set():
-            samples = [sample for sublist in [sensor.sample() for sensor in self._sensors] for sample in sublist]
-            self._post_samples(samples)
+            self._sample()
             # to be able to gracefully sto sleaping in cas of process teminatio we do use an event that is set to
             # true when the process is terminated, therefore if the process is not terminated this wait whill act
             # as a sleep for the timeout time

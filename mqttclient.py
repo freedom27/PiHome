@@ -7,6 +7,13 @@ class MQTTClient(object):
     the connection, starting the backround loop and publishing the samples and the notification
     to the broker
 
+    The proper way to use this class is to call the "start" method before trying to call any other method.
+    Of course since this way an actual connection with the MQTT broker is estabilished it is better
+    to do it only when it is really necessary (to avoid wasting resources not to mention the risks involved
+    in serializing a socket).
+    Once the connection is not needed anymore the "stop" method should be invoked to disconnect from the
+    MQTT broker.
+
     Attributes:
         _addr (str): the address of the mqtt broker
         _port (int): the port where the mqtt broker is listening for connections

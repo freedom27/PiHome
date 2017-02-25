@@ -1,5 +1,6 @@
 from sensor import Sensor, Sample
 import MyPyBMP180
+from logger import logger
 
 
 class BMPSensor(Sensor):
@@ -41,4 +42,4 @@ class BMPSensor(Sensor):
             if "temperature" in self._sensors:
                 samples.append(Sample("temperature", temperature, "C"))
         except MyPyBMP180.BMP180Exception as error:
-            print(error.message)
+            logger.error(error.message)

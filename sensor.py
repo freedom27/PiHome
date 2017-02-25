@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from logger import logger
 
 
 class Sensor(metaclass=ABCMeta):
@@ -23,6 +24,7 @@ class Sensor(metaclass=ABCMeta):
         Returns:
             [Sample]. An array of Sample objects containing the data sampled from the sensor
         """
+        logger.info("%s: collect sensor data", self.__class__.__name__)
         samples = []
         self._fetch_data(samples)
         return samples

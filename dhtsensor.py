@@ -1,5 +1,6 @@
 import MyPyDHT
 from sensor import Sensor, Sample
+from logger import logger
 
 
 class DHTSensor(Sensor):
@@ -55,4 +56,4 @@ class DHTSensor(Sensor):
             if "humidity" in self._sensors:
                 samples.append(Sample("humidity", round(humidity, 2), "%"))
         except MyPyDHT.DHTException as error:
-            print(error.message)
+            logger.error(error.message)

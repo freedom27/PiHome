@@ -1,4 +1,6 @@
 import paho.mqtt.client as mqtt
+from logger import logger
+
 
 class MQTTClient(object):
     """A wrapper around the paho MQTT library
@@ -61,6 +63,7 @@ class MQTTClient(object):
             self._client.connect(self._addr, port=self._port, keepalive=60, bind_address="")
             self._client.loop_start()
             self._connected = True
+            logger.info("Connection with MQTT Broker at %s:%d estabilished.", self._addr, self._port)
 
     def stop(self):
         """Stop the client
@@ -71,6 +74,7 @@ class MQTTClient(object):
             self._client.loop_stop()
             self._client.disconnect()
             self._connected = False
+            logger.info("Connection with MQTT Broker closed.")
 
     def is_connected(self):
         """Checks if the client is currently connected to a MQTT broker
@@ -96,6 +100,7 @@ class MQTTClient(object):
         """
         complete_topic = "{}/{}".format(self._base_topic, topic)
         self._client.publish(complete_topic, payload, qos=2)
+        logger.info("On topic %s published: %s", complete_topic, payload)
 
     def publish_sample(self, sample):
         """Publish a sample object on a subtopic
@@ -125,3 +130,4 @@ class MQTTClient(object):
         """
         topic = "{}/{}".format(self._base_topic, topic)
         self._client.publish(topic, qos=2)
+        logger.info("Event published on topic %s", topic)

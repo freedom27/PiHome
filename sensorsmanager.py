@@ -2,6 +2,7 @@ import threading
 import multiprocessing
 import signal
 from gpiomanager import GPIO
+from logger import logger
 
 
 class SensorsManager(multiprocessing.Process):
@@ -54,6 +55,7 @@ class SensorsManager(multiprocessing.Process):
             samples ([{str: float}]): an array of samples, each sample is a dictionary that must have at
                                       least a key "type" (will be used to generate the topic)
         """
+        logger.info("Publishing samples")
         if self._lock.acquire(block=True, timeout=5):
             for sample in samples:
                 self._mqtt_client.publish_sample(sample)
@@ -69,6 +71,7 @@ class SensorsManager(multiprocessing.Process):
         # in this case the timeout is 20 seconds because if the lock is acquired
         # by the sampling method it could take a while since some sensors may require
         # time to acquire the data
+        logger.info("Publishing event")
         if self._lock.acquire(block=True, timeout=20):
             self._mqtt_client.publish_event(self._events[channel])
             self._lock.release()
@@ -78,11 +81,13 @@ class SensorsManager(multiprocessing.Process):
 
         The method collect data from all its sensor and then publish it all on the MQTT broker
         """
+        logger.info("Collecting samples from sensors.")
         samples = [sample for sublist in [sensor.sample() for sensor in self._sensors] for sample in sublist]
         self._post_samples(samples)
 
     def _start_sampling(self):
         """Method to invoke to start sampling data using the sensors"""
+        logger.info("Sampling started")
         while not self._stop_sampling.is_set():
             self._sample()
             # to be able to gracefully sto sleaping in cas of process teminatio we do use an event that is set to
@@ -95,8 +100,10 @@ class SensorsManager(multiprocessing.Process):
             #unregistering the events' detection
             for event_channel in self._events.keys():
                 GPIO.remove_event_detect(event_channel)
+                logger.info("Stopped listening for events on GPIO #%d", event_channel)
             #disconnect from the mqtt broker
             self._mqtt_client.stop()
+        logger.info("Sampling stopped")
 
     def _shutdown(self, signum, frame):
         """Stop internal operations
@@ -110,6 +117,7 @@ class SensorsManager(multiprocessing.Process):
             frame (obj): current stack frame object
         """
         self._stop_sampling.set()
+        logger.warning("Terminatin process. Signal %d received while in frame %s", signum, frame)
 
     def run(self):
         """Start the process
@@ -124,4 +132,5 @@ class SensorsManager(multiprocessing.Process):
             # we start listening for events on the event_chnnel port, a bouncetime of 10000 means that
             # after an event is detected a minimum of 10 seconds has to pass before another event could be detected
             GPIO.add_event_detect(event_channel, GPIO.RISING, callback=self._post_event, bouncetime=10000)
+            logger.info("Listening for events on GPIO #%d", event_channel)
         self._start_sampling()

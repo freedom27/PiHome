@@ -1,6 +1,6 @@
 import MyPyDHT
-from sensor import Sensor, Sample
-from logger import logger
+from .sensor import Sensor, Sample
+from .logger import logger
 
 
 class DHTSensor(Sensor):

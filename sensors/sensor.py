@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from logger import logger
+from .logger import logger
 
 
 class Sensor(metaclass=ABCMeta):

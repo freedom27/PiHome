@@ -1,6 +1,6 @@
-from sensor import Sensor, Sample
 import MyPyBMP180
-from logger import logger
+from .sensor import Sensor, Sample
+from .logger import logger
 
 
 class BMPSensor(Sensor):

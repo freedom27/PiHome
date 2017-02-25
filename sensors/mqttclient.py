@@ -1,5 +1,5 @@
 import paho.mqtt.client as mqtt
-from logger import logger
+from .logger import logger
 
 
 class MQTTClient(object):

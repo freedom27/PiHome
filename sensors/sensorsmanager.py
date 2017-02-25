@@ -1,9 +1,8 @@
 import threading
 import multiprocessing
 import signal
-from gpiomanager import GPIO
-from logger import logger
-
+from .logger import logger
+from ..common.gpiomanager import GPIO
 
 class SensorsManager(multiprocessing.Process):
     """This class is a Process that uses its sensor to sample data and publish it on a mqtt broker

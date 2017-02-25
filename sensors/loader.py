@@ -1,6 +1,6 @@
-import configmanager
-from mqttclient import MQTTClient
-from sensorsmanager import SensorsManager
+from ..common import configmanager
+from .mqttclient import MQTTClient
+from .sensorsmanager import SensorsManager
 
 
 def _get_dht_sensor():
@@ -15,7 +15,7 @@ def _get_dht_sensor():
     Returns:
         DHTSensor. An instance of DHTSensor (a subclass of Sensor)
     """
-    import dhtsensor
+    from . import dhtsensor
     pin = configmanager.config.getint("dht", "gpio_pin")
     active_sensors = configmanager.config["dht"]["active_sensors"].split(",")
     model = configmanager.config["dht"]["model"]
@@ -33,7 +33,7 @@ def _get_bmp_sensor():
     Returns:
         BMPSensor. An instance of BMPSensor (a subclass of Sensor)
     """
-    import bmpsensor
+    from . import bmpsensor
     active_sensors = configmanager.config["bmp"]["active_sensors"].split(",")
     return bmpsensor.BMPSensor(active_sensors)
 

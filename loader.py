@@ -1,7 +1,4 @@
 from .common import configmanager
-from .common.mqttclient import MQTTClient
-from .agents.sensorsmanager import SensorsManager
-from .agents.presencedetector import NetworkPresenceDetector
 
 
 def _get_dht_sensor():
@@ -129,6 +126,7 @@ def _get_mqtt_client():
     Returns:
         MQTTClient
     """
+    from .common.mqttclient import MQTTClient
     addr = configmanager.config["mqtt"]["host"]
     port = configmanager.config.getint("mqtt", "port")
     auth_info = {}
@@ -152,12 +150,14 @@ def get_sensors_manager():
     Returns:
         SensorsManager
     """
+    from .agents.sensorsmanager import SensorsManager
     sensors = _get_sensors()
     events = _get_events()
     mqtt_client = _get_mqtt_client()
     return SensorsManager(sensors, events, mqtt_client)
 
 def get_presence_detector():
+    from .agents.presencedetector import NetworkPresenceDetector
     mqtt_client = _get_mqtt_client()
     persons = [("Stefano", "192.168.1.16")]
     return NetworkPresenceDetector(persons, mqtt_client)

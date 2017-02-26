@@ -1,10 +1,10 @@
-import threading
 import multiprocessing
-import signal
-from .logger import logger
+from ..common.logger import logger
 from ..common.gpiomanager import GPIO
+from ..common.stoppableprocess import StoppableLoopProcess
 
-class SensorsManager(multiprocessing.Process):
+
+class SensorsManager(StoppableLoopProcess):
     """This class is a Process that uses its sensor to sample data and publish it on a mqtt broker
 
     The class, which is a subclass of multiprocessing.Process, collect sensor data and
@@ -40,12 +40,8 @@ class SensorsManager(multiprocessing.Process):
         self._sensors = sensors
         self._events = events
         self._mqtt_client = mqtt_client
-        self._sampling_interval = sampling_interval
         self._lock = multiprocessing.Lock()
-        self._stop_sampling = threading.Event()
-        # register the shutdown method when a SIGTERM is detected to perform a clean process termination
-        signal.signal(signal.SIGTERM, self._shutdown)
-        super(SensorsManager, self).__init__()
+        super(SensorsManager, self).__init__(sampling_interval)
 
     def _post_samples(self, samples):
         """Publish samples on the mqtt broker
@@ -84,45 +80,7 @@ class SensorsManager(multiprocessing.Process):
         samples = [sample for sublist in [sensor.sample() for sensor in self._sensors] for sample in sublist]
         self._post_samples(samples)
 
-    def _start_sampling(self):
-        """Method to invoke to start sampling data using the sensors"""
-        logger.info("Sampling started")
-        while not self._stop_sampling.is_set():
-            self._sample()
-            # to be able to gracefully sto sleaping in cas of process teminatio we do use an event that is set to
-            # true when the process is terminated, therefore if the process is not terminated this wait whill act
-            # as a sleep for the timeout time
-            self._stop_sampling.wait(timeout=self._sampling_interval)
-
-        # perform clean-up befor exiting
-        if self._lock.acquire(block=True, timeout=10):
-            #unregistering the events' detection
-            for event_channel in self._events.keys():
-                GPIO.remove_event_detect(event_channel)
-                logger.info("Stopped listening for events on GPIO #%d", event_channel)
-            #disconnect from the mqtt broker
-            self._mqtt_client.stop()
-        logger.info("Sampling stopped")
-
-    def _shutdown(self, signum, frame):
-        """Stop internal operations
-
-        Method to call to trigger termination of the process (to be used registering it as a SIGNAL handler);
-        it sets the internal stop_sampling event to True causing the halt of the sampling loop as soon as
-        the ongoing operation (sampling or publishing) are completed (effectively causing the end of the process)
-
-        Args:
-            signum (int): the number associated to the signal received
-            frame (obj): current stack frame object
-        """
-        self._stop_sampling.set()
-        logger.warning("Terminatin process. Signal %d received while in frame %s", signum, frame)
-
-    def run(self):
-        """Start the process
-
-        Register the GPIO events to listen and start sampling
-        """
+    def _setup(self):
         # starts the MQTT client
         self._mqtt_client.start()
         # registering the events to detect
@@ -132,4 +90,18 @@ class SensorsManager(multiprocessing.Process):
             # after an event is detected a minimum of 10 seconds has to pass before another event could be detected
             GPIO.add_event_detect(event_channel, GPIO.RISING, callback=self._post_event, bouncetime=10000)
             logger.info("Listening for events on GPIO #%d", event_channel)
-        self._start_sampling()
+        logger.info("Sampling started")
+
+    def _teardown(self):
+        logger.info("Sampling stopped")
+        # perform clean-up befor exiting
+        if self._lock.acquire(block=True, timeout=10):
+            #unregistering the events' detection
+            for event_channel in self._events.keys():
+                GPIO.remove_event_detect(event_channel)
+                logger.info("Stopped listening for events on GPIO #%d", event_channel)
+            #disconnect from the mqtt broker
+            self._mqtt_client.stop()
+
+    def _loop(self):
+        self._sample()

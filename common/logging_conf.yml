@@ -9,7 +9,7 @@ handlers:
     formatter: simple
     stream: ext://sys.stdout
 loggers:
-  sensorsLogger:
+  PiHomeLogger:
     level: DEBUG
     handlers: [console]
     propagate: no

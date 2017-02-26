@@ -1,6 +1,7 @@
-from ..common import configmanager
-from .mqttclient import MQTTClient
-from .sensorsmanager import SensorsManager
+from .common import configmanager
+from .common.mqttclient import MQTTClient
+from .agents.sensorsmanager import SensorsManager
+from .agents.presencedetector import NetworkPresenceDetector
 
 
 def _get_dht_sensor():
@@ -15,7 +16,7 @@ def _get_dht_sensor():
     Returns:
         DHTSensor. An instance of DHTSensor (a subclass of Sensor)
     """
-    from . import dhtsensor
+    from .sensors import dhtsensor
     pin = configmanager.config.getint("dht", "gpio_pin")
     active_sensors = configmanager.config["dht"]["active_sensors"].split(",")
     model = configmanager.config["dht"]["model"]
@@ -33,7 +34,7 @@ def _get_bmp_sensor():
     Returns:
         BMPSensor. An instance of BMPSensor (a subclass of Sensor)
     """
-    from . import bmpsensor
+    from .sensors import bmpsensor
     active_sensors = configmanager.config["bmp"]["active_sensors"].split(",")
     return bmpsensor.BMPSensor(active_sensors)
 
@@ -155,3 +156,8 @@ def get_sensors_manager():
     events = _get_events()
     mqtt_client = _get_mqtt_client()
     return SensorsManager(sensors, events, mqtt_client)
+
+def get_presence_detector():
+    mqtt_client = _get_mqtt_client()
+    persons = [("Stefano", "192.168.1.16")]
+    return NetworkPresenceDetector(persons, mqtt_client)

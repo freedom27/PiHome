@@ -157,7 +157,18 @@ def get_sensors_manager():
     return SensorsManager(sensors, events, mqtt_client)
 
 def get_presence_detector():
+    """Return an instance of NetworkPresenceDetector
+
+    The function uses the configuration manager to get all the knowkn ips to monitor and the MQTT broker info
+    to be able to instantiate the NetworkPresenceDetector and return it
+
+    Args:
+        None
+
+    Returns:
+        NetworkPresenceDetector
+    """
     from .agents.presencedetector import NetworkPresenceDetector
     mqtt_client = _get_mqtt_client()
-    persons = [("Stefano", "192.168.1.16")]
+    persons = [(known_ip[0], known_ip[1]) for known_ip in configmanager.config["network_presence_detector"]["known_ips"].split(",")]
     return NetworkPresenceDetector(persons, mqtt_client)

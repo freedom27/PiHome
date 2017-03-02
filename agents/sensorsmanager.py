@@ -81,6 +81,10 @@ class SensorsManager(StoppableLoopProcess):
         self._post_samples(samples)
 
     def _setup(self):
+        """ Setting up the process for execution
+
+        The method estabilishes the connection with the broker and registers the callbacks for the GPIO events
+        """
         # starts the MQTT client
         self._mqtt_client.start()
         # registering the events to detect
@@ -93,6 +97,10 @@ class SensorsManager(StoppableLoopProcess):
         logger.info("Sampling started")
 
     def _teardown(self):
+        """ Prepare the process for temination
+
+        The method closes the connection to the broker and unregisters the callbacks for the GPIO events
+        """
         logger.info("Sampling stopped")
         # perform clean-up befor exiting
         if self._lock.acquire(block=True, timeout=10):
@@ -104,4 +112,5 @@ class SensorsManager(StoppableLoopProcess):
             self._mqtt_client.stop()
 
     def _loop(self):
+        """ Collects data from sensors and publishes them on the broker"""
         self._sample()

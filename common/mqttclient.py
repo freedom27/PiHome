@@ -1,5 +1,11 @@
+import re
 import paho.mqtt.client as mqtt
 from .logger import logger
+
+
+def _topic_to_regex(topic):
+    regex_topic = topic.replace('/', '\\/').replace('#', '(.*)').replace('+', '(.*)')
+    return re.compile(regex_topic)
 
 
 class MQTTClient(object):
@@ -42,6 +48,8 @@ class MQTTClient(object):
         self._port = port
         self._connected = False
         self._client = mqtt.Client(client_id="", clean_session=True, userdata=None, protocol=mqtt.MQTTv311)
+        self._client.on_message = self.on_messagge
+        self._callbacks = {}
         if auth_info is not None:
             self._client.username_pw_set(auth_info["user"], auth_info["password"])
         self._base_topic = base_topic
@@ -115,3 +123,18 @@ class MQTTClient(object):
         topic = "{}/{}".format(self._base_topic, topic)
         self._client.publish(topic, qos=2)
         logger.info("Event published on topic %s", topic)
+
+    def register(self, topic, callback):
+        self._callbacks[_topic_to_regex(topic)] = callback
+        self._client.subscribe(topic, 2)
+        logger.info("Callback registered for topic %s", topic)
+
+    def unregister(self, topic):
+        del self._callbacks[_topic_to_regex(topic)]
+        logger.info("Callback unregistered for topic %s", topic)
+
+    def on_messagge(self, client, user_data, message):
+        logger.info("Message on topic %s received with payload: %s", message.topic, message.payload)
+        for topic_regex, callback in self._callbacks.items():
+            if topic_regex.match(message.topic):
+                callback(message)

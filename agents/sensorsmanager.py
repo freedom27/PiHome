@@ -46,6 +46,11 @@ class SensorsManager(StoppableLoopProcess):
     def _post_samples(self, samples):
         """Publish samples on the mqtt broker
 
+        The method publishes a list of sample objects received in input. The topic on which a sample is published
+        is the concatenation of the base_topic of the broker and the 'label' attribute of the sample whereas the
+        payload is a json string in the format {"data": float, "unit": str}, for example the payload of a temperature
+        sample would be: {"data": 22.5, "unit": "C"}
+
         Args:
             samples ([{str: float}]): an array of samples, each sample is a dictionary that must have at
                                       least a key "type" (will be used to generate the topic)
@@ -53,7 +58,8 @@ class SensorsManager(StoppableLoopProcess):
         logger.info("Publishing samples")
         if self._lock.acquire(block=True, timeout=5):
             for sample in samples:
-                self._mqtt_client.publish_sample(sample)
+                payload = "{{\"data\": {data}, \"unit\": \"{unit}\"}}".format(data=sample.data, unit=sample.unit)
+                self._mqtt_client.publish(sample.label, payload)
             self._lock.release()
 
     def _post_event(self, channel):

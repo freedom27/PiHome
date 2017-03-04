@@ -84,7 +84,6 @@ class MQTTClient(object):
         """
         return self._connected
 
-
     def publish(self, topic, payload):
         """Publish a payload on a subtopic
 
@@ -101,21 +100,6 @@ class MQTTClient(object):
         complete_topic = "{}/{}".format(self._base_topic, topic)
         self._client.publish(complete_topic, payload, qos=2)
         logger.info("On topic %s published: %s", complete_topic, payload)
-
-    def publish_sample(self, sample):
-        """Publish a sample object on a subtopic
-
-        The method publish a sample object, received in input (the final topic is the concatenation of
-        the base topic provided to the client at init time and the topic parameter received in input).
-
-        Args:
-            sample (Sample): the sample object to publish. The topic on which the sample is published
-                             is the concatenation of the _base_topic and the label attribute of the sample
-                             whereas the payload is a json string in the format {"data": float, "unit": str},
-                             for example the payload of a temperature sample would be: {"data": 22.5, "unit": "C"}
-        """
-        payload = "{{\"data\": {data}, \"unit\": \"{unit}\"}}".format(data=sample.data, unit=sample.unit)
-        self.publish(sample.label, payload)
 
     def publish_event(self, topic):
         """Publish an event on a topic

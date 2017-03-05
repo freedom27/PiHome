@@ -170,5 +170,14 @@ def get_presence_detector():
     """
     from .agents.presencedetector import NetworkPresenceDetector
     mqtt_client = _get_mqtt_client()
-    persons = [(known_ip[0], known_ip[1]) for known_ip in configmanager.config["network_presence_detector"]["known_ips"].split(",")]
+    persons = [(known_ip[0], known_ip[1]) for known_ip in configmanager.config["network_presence_detector"]["known_ips"].split(',')]
     return NetworkPresenceDetector(persons, mqtt_client)
+
+def get_event_manager():
+    from .eventmanager import EventManager
+    from .actions.actions import get_actions
+    mqtt_client = _get_mqtt_client()
+    actions = get_actions()
+    topics_and_actions = [(topic_and_action.split(':')[0], actions[topic_and_action.split(':')[1]])
+                          for topic_and_action in configmanager.config["actions"]["topics_and_actions"].split(',')]
+    return EventManager(mqtt_client, topics_and_actions)

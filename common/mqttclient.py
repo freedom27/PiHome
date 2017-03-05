@@ -125,13 +125,16 @@ class MQTTClient(object):
         logger.info("Event published on topic %s", topic)
 
     def register(self, topic, callback):
-        self._callbacks[_topic_to_regex(topic)] = callback
-        self._client.subscribe(topic, 2)
-        logger.info("Callback registered for topic %s", topic)
+        complete_topic = "{}/{}".format(self._base_topic, topic)
+        self._callbacks[_topic_to_regex(complete_topic)] = callback
+        self._client.subscribe(complete_topic, 2)
+        logger.info("Callback registered for topic %s", complete_topic)
 
     def unregister(self, topic):
-        del self._callbacks[_topic_to_regex(topic)]
-        logger.info("Callback unregistered for topic %s", topic)
+        complete_topic = "{}/{}".format(self._base_topic, topic)
+        self._client.unsubscribe(complete_topic)
+        del self._callbacks[_topic_to_regex(complete_topic)]
+        logger.info("Callback unregistered for topic %s", complete_topic)
 
     def on_messagge(self, client, user_data, message):
         logger.info("Message on topic %s received with payload: %s", message.topic, message.payload)
